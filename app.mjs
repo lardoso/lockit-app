@@ -44,7 +44,7 @@ function mostraPannello(sh, quale) {           // "cartella" | "password2" | "ri
 const UMANI = {
   6:        { t: "Cassaforte aperta", s: "Tutto in ordine: la password è giusta e i tuoi file sono qui.", verde: true },
   7:        { t: "Qui non trovo la tua cassaforte",
-              s: "In questa cartella non c'è nessuna cassaforte che risponda a questa password. Controlla di aver scelto la cartella giusta. Se hai appena estratto uno ZIP, può darsi che dentro ci sia un'altra cartella con lo stesso nome: entra e scegli quella più interna." },
+              s: "In questa cartella non c'è nessuna cassaforte che risponda a questa password. Controlla di aver scelto la cartella giusta." },
   "7bis":   { t: "Questa cartella non è una cassaforte", s: "Non ci sono tracce di Lockit qui dentro. Scegli la cartella della tua cassaforte." },
   2:        { t: "Serve una versione più recente di Lockit", s: "Qui c'è materiale creato da un Lockit più nuovo. Per sicurezza non tocco nulla: aggiorna Lockit, oppure sposta via quel file con Esplora risorse." },
   1:        { t: "Non riesco a leggere tutta la cartella", s: "Alcuni file non si lasciano leggere (forse un altro programma li tiene occupati). Chiudi gli altri programmi e riprova." },
