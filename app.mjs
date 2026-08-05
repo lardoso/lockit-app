@@ -48,13 +48,30 @@ function schermataStato(sh, esito) {
   box.innerHTML = `<strong style="font-size:15px">${esito.stato}</strong> <span style="opacity:.7">(riga ${esito.riga})</span><br><span style="display:block;margin:8px 0">${esito.messaggio}</span>${az}`;
 }
 
+function tornaAllaHome() {
+  for (const figlio of [...document.body.children])
+    if (!figlio.id?.startsWith("vista-")) figlio.style.display = "";
+  for (const v of Object.values(viste)) v.host.hidden = true;
+  window.scrollTo(0, 0);
+}
+
 async function avvia() {
-  const v = await caricaVista("accesso-4");
-  const sh = v.sh;
-  mostraSoloVista("accesso-4");
-  mostraPannello(sh, "cartella");              // il flusso reale parte da "scegli la cartella"
+  const v = await caricaVista("accesso-4");   // preparata, ma NASCOSTA:
+  const sh = v.sh;                            // si parte dalla HOME (T4-2)
+  mostraPannello(sh, "cartella");
   ambiente = ambienteBrowser();
   let cartellaScelta = false;
+
+  // Home -> Accedi commuta alla vista accesso (il bottone della tela e' libero)
+  document.getElementById("btn-accedi")?.addEventListener("click", () => {
+    mostraSoloVista("accesso-4");
+    mostraPannello(sh, cartellaScelta ? "password2" : "cartella");
+    window.scrollTo(0, 0);
+  });
+  // "Creala dalla pagina iniziale" (scialuppa) riporta alla home
+  sh.querySelector("#stato-cartella .scialuppa a")?.addEventListener("click", (ev) => {
+    ev.preventDefault(); tornaAllaHome();
+  });
 
   const scegli = sh.getElementById("scegli");
   scegli?.addEventListener("click", async () => {
