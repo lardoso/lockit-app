@@ -39,13 +39,37 @@ function mostraPannello(sh, quale) {           // "cartella" | "password2" | "ri
   const avviso = sh.getElementById("avviso"); if (avviso) avviso.style.display = "none";
   const demo = sh.getElementById("demo-toggle"); if (demo) demo.closest("p").style.display = "none";
 }
-function schermataStato(sh, esito) {
+// Messaggi UMANI del cantiere (T4-3): titolo chiaro + cosa fare.
+// Testi provvisori: quelli definitivi si ratificano in T6.
+const UMANI = {
+  6:        { t: "Cassaforte aperta", s: "Tutto in ordine: la password è giusta e i tuoi file sono qui.", verde: true },
+  7:        { t: "Qui non trovo la tua cassaforte",
+              s: "In questa cartella non c'è nessuna cassaforte che risponda a questa password. Controlla di aver scelto la cartella giusta. Se hai appena estratto uno ZIP, può darsi che dentro ci sia un'altra cartella con lo stesso nome: entra e scegli quella più interna." },
+  "7bis":   { t: "Questa cartella non è una cassaforte", s: "Non ci sono tracce di Lockit qui dentro. Scegli la cartella della tua cassaforte." },
+  2:        { t: "Serve una versione più recente di Lockit", s: "Qui c'è materiale creato da un Lockit più nuovo. Per sicurezza non tocco nulla: aggiorna Lockit, oppure sposta via quel file con Esplora risorse." },
+  1:        { t: "Non riesco a leggere tutta la cartella", s: "Alcuni file non si lasciano leggere (forse un altro programma li tiene occupati). Chiudi gli altri programmi e riprova." },
+  "1b":     { t: "Memoria insufficiente per la verifica", s: "Il computer non ha abbastanza memoria libera per controllare la password. Chiudi altre attività o prova da un dispositivo con più memoria." },
+  "1c":     { t: "C'è un intruso al posto del file di servizio", s: "Il nome riservato della cassaforte è occupato da qualcosa che non riconosco. Va messo da parte prima di continuare." },
+  "1d":     { t: "Troppi materiali diversi in questa cartella", s: "Ci sono troppe famiglie di file da verificare. Metti da parte quelli che non c'entrano e riprova." },
+  "1e":     { t: "Troppi file da verificare", s: "Ci sono troppi materiali da controllare in una volta. Mettine da parte qualcuno e riprova." },
+  "1e-rigida": { t: "Troppi file da esaminare", s: "Per sicurezza non tocco nulla finché non rientri: sposta via qualche materiale con Esplora risorse e rifai la scansione." },
+  3:        { t: "Qui ci sono due casseforti mescolate", s: "Ho trovato materiali di casseforti diverse nella stessa cartella. Vanno separati prima di continuare." },
+  4:        { t: "Copie in conflitto tra loro", s: "Due copie del file di servizio non coincidono: possibile corruzione. Serve una risoluzione manuale." },
+  5:        { t: "Materiale riconosciuto ma non verificato", s: "C'è materiale di Lockit che questa password non apre. Potrebbe essere di un'altra cassaforte: riprova con la password giusta." },
+  "D13-1":  { t: "La cassaforte è in una sottocartella", s: "La password è giusta, ma il file di servizio vive solo in una sottocartella: va installato nella cartella principale." },
+};
+function schermataStato(sh, esito, filesVisti) {
   let box = sh.getElementById("app-stato");
   if (!box) { box = document.createElement("div"); box.id = "app-stato";
-    box.style.cssText = "margin:16px auto;max-width:520px;padding:16px;border:2px solid #1a7f4e;border-radius:14px;background:#f2fbf6;font-family:inherit;text-align:center";
     sh.querySelector("main")?.appendChild(box); }
+  const chiave = (esito.riga === 7 && !esito.messaggio.includes("password")) ? "7bis" : esito.riga;
+  const u = UMANI[chiave] ?? { t: "Qualcosa non torna", s: esito.messaggio };
+  box.style.cssText = "margin:16px auto;max-width:560px;padding:18px 20px;border:2px solid " + (u.verde ? "#1a7f4e" : "#b98a1f") + ";border-radius:14px;background:" + (u.verde ? "#f2fbf6" : "#fdf8ec") + ";font-family:inherit;text-align:center";
   const az = esito.azioni.map(a => `<button data-azione="${a}" style="margin:4px;padding:8px 12px">${a.replaceAll("_", " ")}</button>`).join("");
-  box.innerHTML = `<strong style="font-size:15px">${esito.stato}</strong> <span style="opacity:.7">(riga ${esito.riga})</span><br><span style="display:block;margin:8px 0">${esito.messaggio}</span>${az}`;
+  box.innerHTML = `<strong style="font-size:17px;display:block;margin-bottom:6px">${u.t}</strong>` +
+    `<span style="display:block;margin:0 0 10px;line-height:1.45">${u.s}</span>` + az +
+    `<span style="display:block;margin-top:12px;font-size:11px;color:#8a8f96">codice per l'assistenza: ${esito.stato} · riga ${esito.riga}</span>` +
+    (!u.verde && filesVisti?.length ? `<details style="margin-top:8px;text-align:left;font-size:11px;color:#8a8f96"><summary style="cursor:pointer">cosa ho visto in questa cartella (${filesVisti.length} voci)</summary><div style="margin-top:6px;white-space:pre-wrap">${filesVisti.join("\n")}</div></details>` : "");
 }
 
 function tornaAllaHome() {
@@ -96,7 +120,7 @@ async function avvia() {
     const spia = (e) => { if (e.passwordAccettata) apri2.textContent = "Password accettata, completo la verifica…"; };
     try {
       const r = await apriCassaforte(ambiente, pw, spia);
-      schermataStato(sh, r.esito);
+      schermataStato(sh, r.esito, r.filesVisti);
       apri2.textContent = "Apri la cassaforte"; apri2.disabled = false;
     } catch (e) {
       schermataStato(sh, { stato: "ERRORE", riga: "-", messaggio: "Errore imprevisto: " + (e?.message || e), azioni: [] });
