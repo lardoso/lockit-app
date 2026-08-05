@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lockit · Documenti di casa</title>
+<style>
+  :root{
+    --carta:#F3F4F0; --pannello:#FFFFFF; --inchiostro:#232A33; --grigio:#5C6874;
+    --linea:#DCE0DA; --ottone:#8A6D3B; --cartella:#F6BE2C; --cartella-testo:#946200;
+    --protetto:#16A34A; --protetto-bg:#E8F5EC;
+    --esposto:#DC2626; --esposto-bg:#FBEAEA;
+    --sconosciuto:#64748B; --sconosciuto-bg:#EEF1F4;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--carta); color:var(--inchiostro);
+    font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+  .serif{font-family:Georgia,"Times New Roman",serif}
+  .mono{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:.86em;color:var(--grigio)}
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible{outline:3px solid var(--ottone); outline-offset:2px}
+  .largh{max-width:920px; margin:0 auto; padding:0 20px}
+
+  /* ===== segni ===== */
+  .segno-prot{width:20px;height:20px;flex:none;display:block}
+  .segno-esposto,.segno-boh{width:20px;height:20px;flex:none;display:block}
+  .cartella-icona{width:22px;height:17px;flex:none;position:relative;background:var(--cartella);
+    border-radius:2px 3px 3px 3px;opacity:.85}
+  .cartella-icona::before{content:"";position:absolute;top:-4px;left:0;width:10px;height:5px;
+    background:var(--cartella);border-radius:2px 2px 0 0}
+  .stato{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;
+    padding:3px 9px;border-radius:999px;white-space:nowrap}
+  .stato.prot{color:var(--protetto);background:var(--protetto-bg)}
+  .stato.chiaro{color:var(--esposto);background:var(--esposto-bg)}
+  .stato.boh{color:var(--sconosciuto);background:var(--sconosciuto-bg)}
+
+  /* ===== blocco fisso in alto ===== */
+  #alto{position:fixed; top:0; left:0; right:0; z-index:30;
+    background:var(--carta); border-bottom:1px solid var(--linea);
+    box-shadow:0 2px 10px rgba(35,42,51,.06)}
+  #alto .banda{background:var(--pannello); border-bottom:1px solid var(--linea)}
+  .testata{display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding-top:12px; padding-bottom:12px}
+  .marchio{display:flex; align-items:center; gap:10px; cursor:pointer; border:0; background:transparent; padding:0}
+  .marchio .nome{font-family:Georgia,serif; font-size:24px; letter-spacing:.16em; font-weight:700; color:var(--inchiostro)}
+  .lucchetto-logo{width:26px; height:26px; flex:none}
+  .cassaforte-nome{margin-left:auto; text-align:right}
+  .cassaforte-nome .etichetta{font-size:12px; color:var(--grigio); letter-spacing:.06em}
+  .cassaforte-nome .valore{font-family:Georgia,serif; font-size:19px}
+  button.esci{font:inherit; font-size:16px; border:1px solid var(--linea); background:#fff; color:var(--inchiostro);
+    border-radius:9px; padding:7px 30px; cursor:pointer; margin-left:12px; align-self:center}
+  button.esci:hover{border-color:var(--inchiostro)}
+  .azioni{display:flex; gap:10px; flex-wrap:wrap; align-items:center; padding:12px 0 10px}
+  .azioni .primaria{font:inherit; border:1px solid var(--inchiostro); background:var(--inchiostro);
+    color:#fff; border-radius:10px; padding:11px 0; cursor:pointer; font-weight:600; width:170px; text-align:center}
+  .azioni .secondaria{font:inherit; border:1px solid var(--linea); background:#fff;
+    color:var(--inchiostro); border-radius:10px; padding:11px 0; cursor:pointer; width:170px; text-align:center}
+  .azioni .cerca{margin-left:auto; position:relative}
+  #cerca-x{position:absolute; right:8px; top:50%; transform:translateY(-50%); border:0; background:transparent;
+    font-size:18px; color:var(--grigio); cursor:pointer; padding:2px 6px}
+  #cerca-x:hover{color:var(--inchiostro)}
+  input[type="search"]::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none;display:none}
+  .azioni input[type=search]{font:inherit; border:1px solid var(--linea); border-radius:10px;
+    padding:10px 34px 10px 14px; min-width:210px; background:#fff}
+  .sottobarra{display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:2px 0 12px}
+  .percorso{display:flex; align-items:center; gap:4px; flex-wrap:wrap}
+  .percorso button{font:inherit; border:0; background:transparent; color:var(--inchiostro);
+    cursor:pointer; padding:4px 8px; border-radius:7px; font-family:Georgia,serif; font-size:17px}
+  .percorso button:hover{background:#fff}
+  .percorso button.corrente{cursor:default}
+  .percorso button.corrente:hover{background:transparent}
+  .percorso .sep{color:var(--grigio)}
+  .conteggi{margin-left:auto; font-size:14px; color:var(--grigio); display:flex; gap:14px}
+  .conteggi b.p{color:var(--protetto)}
+  .conteggi b.c{color:var(--esposto)}
+  .conteggi b.u{color:var(--sconosciuto)}
+  .conteggi b.k{color:var(--cartella-testo)}
+
+  main{padding-bottom:120px}
+
+  /* ===== elenco ===== */
+  .lista{background:var(--pannello); border:1px solid var(--linea); border-radius:12px; overflow:hidden}
+  .intest, .riga{display:grid; grid-template-columns:30px minmax(0,1fr) 110px 130px 110px;
+    gap:12px; align-items:center; padding:11px 16px}
+  .col-dim{justify-self:end; text-align:right}
+  .col-data{justify-self:end; text-align:right}
+  .col-az{justify-self:end}
+  .intest{font-size:12px; letter-spacing:.05em; color:var(--grigio); text-transform:uppercase;
+    background:#FBFBF9; border-bottom:1px solid var(--linea)}
+  .intest button{font:inherit; letter-spacing:inherit; text-transform:inherit; color:inherit;
+    border:0; background:transparent; padding:0; cursor:pointer; display:inline-flex; gap:5px; align-items:center}
+  .intest button:hover{color:var(--inchiostro)}
+  .intest .freccia{font-size:10px}
+  .riga{border-bottom:1px solid var(--linea); cursor:pointer; transition:background .5s}
+  .riga:last-child{border-bottom:0}
+  .riga:hover{background:#FAFAF7}
+  .riga.lampo{background:var(--esposto-bg)}
+  .riga.lampo-p{background:var(--protetto-bg)}
+  .cella-nome{display:flex; align-items:center; gap:11px; min-width:0}
+  .blocco-nome{min-width:0}
+  .nomefile{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block}
+  .sotto-nome{font-size:12.5px; color:var(--grigio)}
+  .sotto-nome b.p{color:var(--protetto); font-weight:600}
+  .sotto-nome b.c{color:var(--esposto); font-weight:600}
+  .riga .agisci{font:inherit; border:1px solid var(--linea); background:#fff; border-radius:8px;
+    padding:7px 0; cursor:pointer; font-size:14px; width:96px; text-align:center}
+  .riga .agisci:hover{border-color:var(--inchiostro)}
+  .riga.cartella .nomefile{font-weight:600}
+  .riga.cartella .entra{color:var(--grigio); font-size:20px; padding:0 10px; justify-self:end}
+
+  .vuoto-msg{padding:44px 24px; text-align:center; color:var(--grigio); font-size:16px; line-height:1.6}
+  .vuoto-msg .cartella-icona{margin:0 auto 14px; width:34px; height:26px}
+  .vuoto-msg .cartella-icona::before{width:15px;height:7px;top:-6px}
+
+  /* ===== piede fisso in basso ===== */
+  #basso{position:fixed; bottom:0; left:0; right:0; z-index:30;
+    background:var(--carta); border-top:1px solid var(--linea);
+    box-shadow:0 -2px 10px rgba(35,42,51,.05)}
+  .piede{font-size:13.5px; color:var(--grigio); padding-top:10px; padding-bottom:10px;
+    display:flex; gap:10px 18px; flex-wrap:wrap; align-items:center}
+  .piede a{color:var(--inchiostro)}
+  .uscita{display:flex; align-items:center; gap:8px}
+  .uscita select{font:inherit; font-size:13.5px; border:1px solid var(--linea); border-radius:8px;
+    padding:4px 8px; background:#fff; color:var(--inchiostro)}
+  .toast{position:fixed; left:50%; transform:translateX(-50%); bottom:76px; z-index:40;
+    background:var(--inchiostro); color:#fff; padding:10px 18px; border-radius:10px; font-size:13.5px;
+    box-shadow:0 8px 24px rgba(35,42,51,.25); display:none}
+  .toast.visibile{display:block}
+
+  /* ===== finestre ===== */
+  .velo{position:fixed; inset:0; background:rgba(35,42,51,.45); display:none; z-index:60}
+  .velo.aperto{display:block}
+  .finestra{position:fixed; z-index:61; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:min(520px, calc(100vw - 32px)); background:var(--pannello); border:1px solid var(--linea);
+    border-radius:14px; padding:24px 26px; box-shadow:0 18px 60px rgba(35,42,51,.25); display:none}
+  .finestra.aperta{display:block}
+  .finestra .chiudi{position:absolute; top:10px; right:12px; border:0; background:transparent;
+    font-size:22px; cursor:pointer; color:var(--grigio); padding:6px}
+  .finestra h2{font-family:Georgia,serif; font-size:21px; margin:0; word-break:break-word}
+  .finestra p{font-size:16px; margin:10px 0 0; line-height:1.55}
+  .scheda .testa{display:flex; align-items:center; gap:12px; margin-bottom:10px}
+  .scheda dl{margin:6px 0 0; display:grid; grid-template-columns:130px 1fr; row-gap:8px;
+    column-gap:12px; font-size:15px}
+  .scheda dt{color:var(--grigio)}
+  .scheda dd{margin:0}
+  .disco{margin-top:16px; padding:12px 14px; background:var(--carta);
+    border:1px solid var(--linea); border-radius:10px}
+  .disco .etich{font-size:12.5px; color:var(--grigio); letter-spacing:.05em; margin-bottom:6px}
+  .disco .codice{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+  .disco .codice code{font-family:ui-monospace,Consolas,monospace; font-size:13.5px; word-break:break-all}
+  .disco button{font:inherit; font-size:14px; border:1px solid var(--linea); background:#fff;
+    border-radius:8px; padding:6px 12px; cursor:pointer; flex:none}
+  .fin-azioni{display:flex; gap:10px; margin-top:18px; justify-content:flex-end}
+  .fin-azioni button{font:inherit; border-radius:9px; padding:10px 16px; cursor:pointer}
+  .fin-azioni .princ{background:var(--inchiostro); color:#fff; border:1px solid var(--inchiostro)}
+  .fin-azioni .sec{background:#fff; border:1px solid var(--linea)}
+
+  .avanz-barra{margin-top:16px; height:10px; border-radius:999px; background:var(--carta);
+    border:1px solid var(--linea); overflow:hidden}
+  .avanz-barra div{height:100%; width:0%; background:var(--inchiostro); transition:width .18s}
+  .avanz-testo{margin-top:10px; font-size:15px; color:var(--grigio)}
+  .avanz-testo.fine{color:var(--inchiostro); font-weight:600}
+
+  @media (max-width:660px){
+    .intest,.riga{grid-template-columns:28px minmax(0,1fr) 96px}
+    .col-dim,.col-data{display:none}
+    .cassaforte-nome{text-align:left}
+    .scheda dl{grid-template-columns:110px 1fr}
+  }
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <radialGradient id="verdefondo" cx="34%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#2FBF63"/><stop offset="45%" stop-color="#16A34A"/>
+      <stop offset="100%" stop-color="#0E7C33"/>
+    </radialGradient>
+    <radialGradient id="rossofondo" cx="34%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#EF5350"/><stop offset="45%" stop-color="#DC2626"/>
+      <stop offset="100%" stop-color="#A81B1B"/>
+    </radialGradient>
+    <radialGradient id="grigiofondo" cx="34%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#8B98A8"/><stop offset="45%" stop-color="#64748B"/>
+      <stop offset="100%" stop-color="#4A5563"/>
+    </radialGradient>
+    <symbol id="lucchetto" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="11.2" fill="url(#verdefondo)"/>
+      <path d="M8.6 11.6 V9.6 a3.4 3.4 0 0 1 6.8 0 v2" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/>
+      <rect x="7.2" y="11.2" width="9.6" height="7.2" rx="1.6" fill="#fff"/>
+      <circle cx="12" cy="14" r="1.25" fill="#16A34A"/>
+      <path d="M12 14.4 L13.1 17 H10.9 Z" fill="#16A34A"/>
+    </symbol>
+    <symbol id="lucchetto-aperto" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="11.2" fill="url(#rossofondo)"/>
+      <path d="M15.4 11.6 V8.7 A3.4 3.4 0 0 0 9.5 6.4 l-0.3 -0.4" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/>
+      <rect x="7.2" y="11.2" width="9.6" height="7.2" rx="1.6" fill="#fff"/>
+      <circle cx="12" cy="14" r="1.25" fill="#DC2626"/>
+      <path d="M12 14.4 L13.1 17 H10.9 Z" fill="#DC2626"/>
+    </symbol>
+    <symbol id="sconosciuto" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="11.2" fill="url(#grigiofondo)"/>
+      <text x="12" y="16.8" text-anchor="middle" font-family="Georgia,serif" font-size="13.5" font-weight="700" fill="#fff">?</text>
+    </symbol>
+  </defs>
+</svg>
+
+<div id="alto">
+  <div class="banda">
+    <div class="largh">
+      <div class="testata">
+        <button class="marchio" id="marchio" aria-label="Torna alla cassaforte">
+          <svg class="lucchetto-logo" aria-hidden="true"><use href="#lucchetto"/></svg><span class="nome serif">LOCKIT</span>
+        </button>
+        <div class="cassaforte-nome">
+          <div class="etichetta">CASSAFORTE</div>
+          <div class="valore serif">Documenti di casa</div>
+        </div>
+        <button class="esci">Esci</button>
+      </div>
+    </div>
+  </div>
+  <div class="largh">
+    <div class="azioni">
+      <button class="primaria" id="btn-proteggi-tutto">Proteggi tutto</button>
+      <button class="secondaria" id="btn-sblocca-tutto">Sblocca tutto</button>
+      <span class="cerca"><input type="search" id="cerca" placeholder="Cerca ovunque…"><button id="cerca-x" aria-label="Chiudi la ricerca" hidden>×</button></span>
+    </div>
+    <div class="sottobarra">
+      <nav class="percorso" id="percorso" aria-label="Percorso nella cassaforte"></nav>
+      <div class="conteggi" id="conteggi"></div>
+    </div>
+  </div>
+</div>
+
+<main class="largh">
+  <div class="lista">
+    <div class="intest">
+      <div></div>
+      <div><button id="ord-nome">Nome <span class="freccia" id="fr-nome">▲</span></button></div>
+      <div class="col-dim"><button id="ord-dim"><span class="freccia" id="fr-dim"></span> Dimensione</button></div>
+      <div class="col-data"><button id="ord-data"><span class="freccia" id="fr-data"></span> Ultima modifica</button></div>
+      <div class="col-az">Azione</div>
+    </div>
+    <div id="corpo-lista"></div>
+  </div>
+</main>
+
+<div id="basso">
+  <div class="largh">
+    <div class="piede">
+      <span class="uscita">Uscita automatica:
+        <select id="uscita" aria-label="Uscita automatica">
+          <option>5 minuti</option><option>10 minuti</option><option selected>15 minuti</option>
+          <option>30 minuti</option><option>60 minuti</option><option>Mai</option>
+        </select>
+      </span>
+      <a href="#">File di soccorso</a>
+      <span style="margin-left:auto" class="mono">Lockit MVP 0.1</span>
+      
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Con “Mai” esci solo quando premi il pulsante Esci o chiudi la scheda del browser.</div>
+
+<div class="velo" id="velo"></div>
+
+<div class="finestra scheda" id="scheda" role="dialog" aria-modal="true">
+  <button class="chiudi" data-chiudi aria-label="Chiudi">×</button>
+  <div class="testa"><div id="scheda-icona"></div><h2 id="scheda-titolo">—</h2></div>
+  <div id="scheda-pill"></div>
+  <dl>
+    <dt>Dimensione</dt><dd id="scheda-dim">—</dd>
+    <dt>Ultima modifica</dt><dd id="scheda-data">—</dd>
+    <dt>Si trova in</dt><dd id="scheda-percorso">—</dd>
+  </dl>
+  <div class="disco" id="scheda-disco">
+    <div class="etich">NOME SUL DISCO</div>
+    <div class="codice"><code id="scheda-codice">—</code><button id="scheda-copia">Copia</button></div>
+  </div>
+  <div class="fin-azioni">
+    <button class="princ" id="scheda-azione">Sblocca</button>
+    <button class="sec" data-chiudi>Chiudi</button>
+  </div>
+</div>
+
+<div class="finestra" id="conferma" role="dialog" aria-modal="true">
+  <button class="chiudi" data-chiudi aria-label="Chiudi">×</button>
+  <h2 id="conf-titolo">—</h2>
+  <p id="conf-testo">—</p>
+  <div class="fin-azioni">
+    <button class="sec" data-chiudi>Annulla</button>
+    <button class="princ" id="conf-procedi">Procedi</button>
+  </div>
+</div>
+
+<div class="finestra" id="educa" role="dialog" aria-modal="true">
+  <h2>È la prima volta che sblocchi un file</h2>
+  <p>Il file tornerà leggibile. Potrai riproteggerlo quando vuoi.</p>
+  <div class="fin-azioni"><button class="princ" id="educa-ok">Ho capito</button></div>
+</div>
+
+<div class="finestra" id="avanza" role="dialog" aria-modal="true">
+  <h2 id="av-titolo">—</h2>
+  <div class="avanz-barra"><div id="av-barra"></div></div>
+  <p class="avanz-testo" id="av-testo">—</p>
+  <div class="fin-azioni"><button class="princ" id="av-chiudi" style="display:none" data-chiudi>Chiudi</button></div>
+</div>
+
+<div class="finestra" id="info" role="dialog" aria-modal="true">
+  <button class="chiudi" data-chiudi aria-label="Chiudi">×</button>
+  <h2 id="info-titolo">—</h2>
+  <p id="info-testo">—</p>
+  <div class="fin-azioni"><button class="princ" data-chiudi>Chiudi</button></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  function $(id){return document.getElementById(id)}
+  var MB=1048576, KB=1024;
+  var RAD="Documenti di casa";
+  var ALFA="0123456789abcdefghjkmnpqrstvwxyz";
+
+  /* ---------- dati ---------- */
+  function F(nome,stato,bytes,dimTxt,iso,dataTxt,codice){
+    return {nome:nome,stato:stato,bytes:bytes,dim:dimTxt,iso:iso,data:dataTxt,codice:codice||""};
+  }
+  var CARTELLE=[{nome:"Foto vacanze",key:"foto"},{nome:"Nuova cartella",key:"nuova"}];
+  var DATI={
+    radice:[
+      F("Contratto affitto 2026.pdf","prot",1.2*MB,"1,2 MB","2026-07-12","12/07/2026","3f9kq27hm4vp8dwx1zr6t0cbe5nsgj4a.lockit"),
+      F("Referto analisi maggio.pdf","prot",640*KB,"640 KB","2026-05-28","28/05/2026","8w2dxk5m9qc3vh6pt1zr40nfsbgj7e2a.lockit"),
+      F("Testamento bozza.docx","prot",88*KB,"88 KB","2026-06-19","19/06/2026","c6nv1jr8t4hq2ke9zw3xm7p0dfs5bg2a.lockit"),
+      F("Polizza casa.pdf","prot",410*KB,"410 KB","2026-02-04","04/02/2026","p7hq2kv9m4c1jr8zw3xt60ndfe5bsg2a.lockit"),
+      F("Password varie.txt","prot",4*KB,"4 KB","2026-07-28","28/07/2026","z3wx7kq2m9v4c1jr8t60hnpdfe5bsg2a.lockit"),
+      F("Rogito notarile.pdf","prot",2.4*MB,"2,4 MB","2026-01-15","15/01/2026","m4c1jr8p7hq2kv9zw3xt60ndfe5bsg2a.lockit"),
+      F("Cartella clinica papà.pdf","prot",5.1*MB,"5,1 MB","2026-03-22","22/03/2026","q2kv9m4c1jr8p7hzw3xt60ndfe5bsg2a.lockit"),
+      F("Busta paga luglio.pdf","prot",190*KB,"190 KB","2026-07-27","27/07/2026","jr8p7hq2kv9m4c1zw3xt60ndfe5bsg2a.lockit"),
+      F("Codici bancari.docx","prot",36*KB,"36 KB","2026-06-09","09/06/2026","v9m4c1jr8p7hq2kzw3xt60ndfe5bsg2a.lockit"),
+      F("Lettera per i figli.docx","prot",52*KB,"52 KB","2026-06-30","30/06/2026","c1jr8p7hq2kv9m4zw3xt60ndfe5bsg2a.lockit"),
+      F("Bilancio famiglia 2025.xlsx","chiaro",210*KB,"210 KB","2026-08-02","02/08/2026"),
+      F("Ricette della nonna.docx","chiaro",1.8*MB,"1,8 MB","2026-07-30","30/07/2026"),
+      F("Volantino palestra.pdf","chiaro",3.2*MB,"3,2 MB","2026-07-29","29/07/2026"),
+      F("hx7t2mq9k4v1jr8pzw3c60ndfe5bsg2a.lockit","boh",1.1*MB,"1,1 MB","2026-07-18","18/07/2026","hx7t2mq9k4v1jr8pzw3c60ndfe5bsg2a.lockit")
+    ],
+    foto:[
+      F("Matrimonio Anna.zip","prot",48*MB,"48 MB","2026-04-03","03/04/2026","k2rp7cw4m9dx1qh6zv3t8n0jfe5bsg2a.lockit"),
+      F("Grecia 2024.zip","prot",31*MB,"31 MB","2024-09-11","11/09/2024","e8mv3ht0q5cj9kw2xr64zn1pdf7bsg2a.lockit"),
+      F("Dolomiti agosto.zip","prot",26*MB,"26 MB","2025-08-20","20/08/2025","t4zj8nq1w7hd5rc2ke9xm3v0pfb6sg2a.lockit"),
+      F("Sicilia con nonni.zip","prot",19*MB,"19 MB","2025-06-14","14/06/2025","hd5rc2ke9xm3v0pt4zj8nq1w7fb6sg2a.lockit"),
+      F("Da sistemare.zip","chiaro",12*MB,"12 MB","2026-08-01","01/08/2026")
+    ],
+    nuova:[]
+  };
+  function percorsoDi(key){
+    if(key==="radice") return RAD;
+    var c=CARTELLE.find(function(x){return x.key===key});
+    return RAD+" › "+(c?c.nome:key);
+  }
+  function tuttiFile(){
+    var out=[];
+    ["radice","foto","nuova"].forEach(function(k){
+      DATI[k].forEach(function(f){out.push({f:f,key:k})});
+    });
+    return out;
+  }
+  function conta(files){
+    var p=0,c=0,u=0;
+    files.forEach(function(x){ if(x.stato==="prot")p++; else if(x.stato==="boh")u++; else c++; });
+    return {p:p,c:c,u:u};
+  }
+  function codiceFinto(nome){
+    var h=0; for(var i=0;i<nome.length;i++){h=(h*31+nome.charCodeAt(i))>>>0;}
+    var s=""; for(var j=0;j<32;j++){ h=(h*1103515245+12345)>>>0; s+=ALFA[h%32]; }
+    return s+".lockit";
+  }
+
+  /* ---------- stato interfaccia ---------- */
+  var vista="radice";
+  var ordine={chiave:"nome",dir:1};
+  var query="";
+  var educato=false, inAttesaEdu=null;
+
+  /* ---------- ordinamento ---------- */
+  function cmpFile(a,b){
+    var k=ordine.chiave, r=0;
+    if(k==="nome") r=a.nome.localeCompare(b.nome,"it");
+    else if(k==="dim") r=a.bytes-b.bytes;
+    else if(k==="data") r=a.iso<b.iso?-1:(a.iso>b.iso?1:0);
+    if(r===0) r=a.nome.localeCompare(b.nome,"it");
+    return r*ordine.dir;
+  }
+
+  /* ---------- righe ---------- */
+  function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;")}
+  function segnoProt(){return '<svg class="segno-prot" aria-label="Protetto"><use href="#lucchetto"/></svg>'}
+  function rigaCartella(c){
+    var n=conta(DATI[c.key]);
+    var agg = DATI[c.key].length===0 ? '<span class="sotto-nome">vuota</span>'
+      : '<span class="sotto-nome"><b class="p">'+n.p+' protett'+(n.p===1?'o':'i')+'</b>'+(n.c?' · <b class="c">'+n.c+' espost'+(n.c===1?'o':'i')+'</b>':'')+'</span>';
+    return '<div class="riga cartella" data-cartella="'+c.key+'">'
+      +'<div></div><div class="cella-nome"><div class="cartella-icona"></div><div class="blocco-nome"><span class="nomefile">'+esc(c.nome)+'</span>'+agg+'</div></div>'
+      +'<div class="col-dim mono"></div><div class="col-data mono"></div><div class="entra">›</div></div>';
+  }
+  function rigaFile(f,key,conPercorso){
+    var prot=f.stato==="prot";
+    var boh=f.stato==="boh";
+    var segno = f.stato==="prot" ? segnoProt() : (f.stato==="boh" ? '<svg class="segno-boh" aria-label="Sconosciuto"><use href="#sconosciuto"/></svg>' : '<svg class="segno-esposto" aria-label="Esposto"><use href="#lucchetto-aperto"/></svg>');
+    var titolo=prot?' title="Nome sul disco: '+esc(f.codice)+'"':'';
+    var sotto=conPercorso?'<span class="sotto-nome">in '+esc(percorsoDi(key))+'</span>':'';
+    return '<div class="riga" data-file data-key="'+key+'" data-nome="'+esc(f.nome)+'">'
+      +segno
+      +'<div class="cella-nome"><div class="blocco-nome"><span class="nomefile"'+titolo+'>'+esc(f.nome)+'</span>'+sotto+'</div></div>'
+      +'<div class="col-dim mono">'+esc(f.dim)+'</div>'
+      +'<div class="col-data mono">'+esc(f.data)+'</div>'
+      +(boh?'<span class="col-az mono">—</span>':'<button class="agisci col-az">'+(prot?"Sblocca":"Proteggi")+'</button>')+'</div>';
+  }
+  function frecce(){
+    $("fr-nome").textContent=ordine.chiave==="nome"?(ordine.dir>0?"▲":"▼"):"";
+    $("fr-dim").textContent =ordine.chiave==="dim" ?(ordine.dir>0?"▲":"▼"):"";
+    $("fr-data").textContent=ordine.chiave==="data"?(ordine.dir>0?"▲":"▼"):"";
+  }
+
+  /* ---------- resa ---------- */
+  function render(){
+    var html="", perc="", cont="";
+    if(query){
+      var q=query.toLowerCase();
+      var cart=CARTELLE.filter(function(c){return c.nome.toLowerCase().indexOf(q)>=0})
+        .sort(function(a,b){return a.nome.localeCompare(b.nome,"it")});
+      var ris=tuttiFile().filter(function(x){return x.f.nome.toLowerCase().indexOf(q)>=0});
+      ris.sort(function(a,b){return cmpFile(a.f,b.f)});
+      var tot=cart.length+ris.length;
+      html = tot
+        ? cart.map(rigaCartella).join("")+ris.map(function(x){return rigaFile(x.f,x.key,true)}).join("")
+        : '<div class="vuoto-msg">Nessun file corrisponde a «'+esc(query)+'».</div>';
+      perc='<button id="p-root">Documenti di casa</button><span class="sep">›</span><button class="corrente">Risultati per «'+esc(query)+'»</button>';
+      cont='<span><b>'+tot+'</b> risultat'+(tot===1?'o':'i')+'</span>';
+    } else if(vista==="radice"){
+      var righe=CARTELLE.slice().sort(function(a,b){return a.nome.localeCompare(b.nome,"it")}).map(rigaCartella);
+      righe=righe.concat(DATI.radice.slice().sort(cmpFile).map(function(f){return rigaFile(f,"radice",false)}));
+      html=righe.join("");
+      perc='<button class="corrente">Documenti di casa</button>';
+      var t=conta(tuttiFile().map(function(x){return x.f}));
+      cont='<span><b class="p">'+t.p+' protetti</b></span><span><b class="c">'+t.c+' espost'+(t.c===1?'o':'i')+'</b></span>'+(t.u?'<span><b class="u">'+t.u+' sconosciut'+(t.u===1?'o':'i')+'</b></span>':'')+'<span><b class="k">'+CARTELLE.length+' cartelle</b></span>';
+    } else {
+      var c=CARTELLE.find(function(x){return x.key===vista});
+      if(DATI[vista].length===0){
+        html='<div class="vuoto-msg"><div class="cartella-icona"></div>Questa cartella è vuota.<br>Copia qui i file da Esplora risorse e poi proteggili.</div>';
+        cont='<span>cartella vuota</span>';
+      } else {
+        html=DATI[vista].slice().sort(cmpFile).map(function(f){return rigaFile(f,vista,false)}).join("");
+        var n=conta(DATI[vista]);
+        cont='<span><b class="p">'+n.p+' protett'+(n.p===1?'o':'i')+'</b></span>'+(n.c?'<span><b class="c">'+n.c+' espost'+(n.c===1?'o':'i')+'</b></span>':'');
+      }
+      perc='<button id="p-root">Documenti di casa</button><span class="sep">›</span><button class="corrente">'+esc(c.nome)+'</button>';
+    }
+    $("corpo-lista").innerHTML=html;
+    $("percorso").innerHTML=perc;
+    $("conteggi").innerHTML=cont;
+    frecce();
+    var pr=$("p-root"); if(pr) pr.onclick=function(){chiudiRicerca(); vista="radice"; render(); window.scrollTo(0,0);};
+    $("cerca-x").hidden = query==="";
+    document.querySelectorAll(".riga.cartella").forEach(function(r){
+      r.addEventListener("click",function(){chiudiRicerca(); vista=r.dataset.cartella; render(); window.scrollTo(0,0);});
+    });
+    document.querySelectorAll('.riga[data-file]').forEach(function(r){
+      r.addEventListener("click",function(e){
+        var f=trova(r.dataset.key,r.dataset.nome);
+        if(e.target.closest(".agisci")){ azioneSingola(f); return; }
+        apriScheda(f,r.dataset.key);
+      });
+    });
+    spazi();
+  }
+  function trova(key,nome){
+    return DATI[key].find(function(f){return f.nome===nome});
+  }
+  function lampo(nome,classe){
+    var r=document.querySelector('.riga[data-nome="'+CSS.escape(nome)+'"]');
+    if(!r) return;
+    r.classList.add(classe);
+    setTimeout(function(){r.classList.remove(classe)},900);
+  }
+
+  function ordina(k){ if(ordine.chiave===k) ordine.dir=-ordine.dir; else ordine={chiave:k,dir:1}; render(); }
+  $("ord-nome").onclick=function(){ordina("nome")};
+  $("ord-dim").onclick=function(){ordina("dim")};
+  $("ord-data").onclick=function(){ordina("data")};
+
+  /* ---------- ricerca globale ---------- */
+  function chiudiRicerca(){ query=""; $("cerca").value=""; }
+  $("cerca").addEventListener("input",function(){ query=this.value.trim(); render(); });
+  $("cerca").addEventListener("keydown",function(e){ if(e.key==="Escape"){ chiudiRicerca(); render(); } });
+  $("cerca-x").onclick=function(){ chiudiRicerca(); render(); };
+
+  /* ---------- finestre ---------- */
+  var velo=$("velo");
+  function apriFin(el){velo.classList.add("aperto"); el.classList.add("aperta");}
+  function chiudiFin(){velo.classList.remove("aperto");
+    document.querySelectorAll(".finestra").forEach(function(f){f.classList.remove("aperta");});}
+  document.querySelectorAll("[data-chiudi]").forEach(function(b){b.onclick=chiudiFin;});
+  velo.onclick=chiudiFin;
+  document.addEventListener("keydown",function(e){if(e.key==="Escape") chiudiFin();});
+
+  /* ---------- scheda ---------- */
+  var schedaFile=null, schedaKey=null;
+  function apriScheda(f,key){
+    schedaFile=f; schedaKey=key;
+    var prot=f.stato==="prot";
+    $("scheda-titolo").textContent=f.nome;
+    $("scheda-icona").innerHTML = f.stato==="prot" ? segnoProt() : (f.stato==="boh" ? '<svg class="segno-boh"><use href="#sconosciuto"/></svg>' : '<svg class="segno-esposto"><use href="#lucchetto-aperto"/></svg>');
+    $("scheda-pill").innerHTML = f.stato==="prot"
+      ?'<span class="stato prot">Protetto · solo tu puoi aprirlo</span>'
+      :(f.stato==="boh"
+        ?'<span class="stato boh">Sconosciuto · file illeggibile o danneggiato</span>'
+        :'<span class="stato chiaro">Esposto · visibile a chiunque usi questa cartella</span>');
+    $("scheda-dim").textContent=f.dim;
+    $("scheda-data").textContent=f.data;
+    $("scheda-percorso").textContent=percorsoDi(key);
+    var mostraDisco = prot || f.stato==="boh";
+    $("scheda-disco").style.display=mostraDisco?"":"none";
+    if(mostraDisco) $("scheda-codice").textContent=f.codice;
+    $("scheda-azione").style.display = f.stato==="boh" ? "none" : "";
+    $("scheda-azione").textContent=prot?"Sblocca":"Proteggi";
+    $("scheda-copia").textContent="Copia";
+    apriFin($("scheda"));
+  }
+  $("scheda-azione").onclick=function(){ chiudiFin(); if(schedaFile) azioneSingola(schedaFile); };
+  $("scheda-copia").onclick=function(){
+    var t=$("scheda-codice").textContent;
+    function ok(){$("scheda-copia").textContent="Copiato";
+      setTimeout(function(){$("scheda-copia").textContent="Copia";},1500);}
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,ok);}else ok();
+  };
+
+  /* ---------- azioni sul singolo file ---------- */
+  function azioneSingola(f){
+    if(!f || f.stato==="boh") return;
+    if(f.stato==="prot"){
+      if(!educato){ inAttesaEdu=f; apriFin($("educa")); return; }
+      sblocca(f);
+    } else proteggi(f);
+  }
+  $("educa-ok").onclick=function(){ educato=true; chiudiFin(); if(inAttesaEdu){sblocca(inAttesaEdu); inAttesaEdu=null;} };
+  function sblocca(f){ f.stato="chiaro"; f.codice=""; render(); lampo(f.nome,"lampo"); }
+  function proteggi(f){ f.stato="prot"; f.codice=codiceFinto(f.nome); render(); lampo(f.nome,"lampo-p"); }
+
+  /* ---------- azioni di massa con avanzamento ---------- */
+  function massa(op){
+    var bersagli=tuttiFile().filter(function(x){return op==="prot"?x.f.stato==="chiaro":x.f.stato==="prot"});
+    var n=bersagli.length;
+    if(n===0){
+      $("info-titolo").textContent=op==="prot"?"Proteggi tutto":"Sblocca tutto";
+      $("info-testo").textContent=op==="prot"?"Non ci sono file da proteggere.":"Non ci sono file da sbloccare.";
+      apriFin($("info")); return;
+    }
+    $("conf-titolo").textContent=op==="prot"?"Proteggi tutto":"Sblocca tutto";
+    $("conf-testo").textContent=op==="prot"
+      ? "Tutti i "+n+" file presenti in tutte le cartelle della tua cassaforte verranno protetti. Procedo?"
+      : "Tutti i "+n+" file presenti in tutte le cartelle della tua cassaforte torneranno leggibili. Procedo?";
+    $("conf-procedi").onclick=function(){ chiudiFin(); avanza(op,bersagli); };
+    apriFin($("conferma"));
+  }
+  function avanza(op,bersagli){
+    var n=bersagli.length, i=0;
+    $("av-titolo").textContent=op==="prot"?"Proteggo i file…":"Sblocco i file…";
+    $("av-chiudi").style.display="none";
+    $("av-barra").style.width="0%";
+    $("av-testo").classList.remove("fine");
+    $("av-testo").textContent="0 di "+n+" file "+(op==="prot"?"protetti":"sbloccati")+", 0 errori";
+    apriFin($("avanza"));
+    var passo=setInterval(function(){
+      i++;
+      var x=bersagli[i-1];
+      if(op==="prot"){ x.f.stato="prot"; x.f.codice=codiceFinto(x.f.nome); }
+      else { x.f.stato="chiaro"; x.f.codice=""; }
+      $("av-barra").style.width=Math.round(i/n*100)+"%";
+      $("av-testo").textContent=i+" di "+n+" file "+(op==="prot"?"protetti":"sbloccati")+", 0 errori";
+      if(i>=n){
+        clearInterval(passo);
+        render();
+        $("av-testo").classList.add("fine");
+        $("av-chiudi").style.display="";
+      }
+    },160);
+  }
+  $("btn-proteggi-tutto").onclick=function(){massa("prot")};
+  $("btn-sblocca-tutto").onclick=function(){massa("sbl")};
+
+  /* ---------- uscita automatica ---------- */
+  var toastTimer=null;
+  $("uscita").onchange=function(){
+    if(this.value==="Mai"){
+      $("toast").classList.add("visibile");
+      if(toastTimer) clearTimeout(toastTimer);
+      toastTimer=setTimeout(function(){$("toast").classList.remove("visibile");},4000);
+    } else { $("toast").classList.remove("visibile"); if(toastTimer) clearTimeout(toastTimer); }
+  };
+
+  /* ---------- spazi sotto/sopra i blocchi fissi ---------- */
+  function spazi(){
+    document.querySelector("main").style.paddingTop=($("alto").offsetHeight+18)+"px";
+    document.querySelector("main").style.paddingBottom=($("basso").offsetHeight+22)+"px";
+  }
+  window.addEventListener("resize",spazi);
+
+  $("marchio").onclick=function(){ chiudiRicerca(); vista="radice"; render(); window.scrollTo(0,0); };
+
+  render();
+})();
+</script>
+</body>
+</html>

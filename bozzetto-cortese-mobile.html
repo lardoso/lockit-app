@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lockit · Dal telefono</title>
+<style>
+  :root{--carta:#F3F4F0;--pannello:#fff;--inchiostro:#232A33;--grigio:#5C6874;
+    --linea:#DCE0DA;--protetto:#16A34A}
+  *{box-sizing:border-box} html,body{margin:0}
+  body{background:var(--carta);color:var(--inchiostro);
+    font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;padding:28px 22px;text-align:center}
+  .marchio{display:inline-flex;align-items:center;gap:10px;margin-bottom:20px}
+  .marchio svg{width:34px;height:34px}
+  .marchio .nome{font-family:Georgia,serif;font-size:30px;letter-spacing:.16em;font-weight:700}
+  .carta-msg{max-width:420px;background:var(--pannello);border:1px solid var(--linea);
+    border-radius:14px;padding:26px 24px;box-shadow:0 8px 30px rgba(35,42,51,.07)}
+  h1{font-family:Georgia,serif;font-size:22px;margin:0 0 12px}
+  p{color:var(--grigio);font-size:15.5px;margin:0 0 14px}
+  p b{color:var(--inchiostro)}
+  p:last-of-type{margin-bottom:0}
+  .soccorso{margin-top:18px;font-size:14.5px}
+  .soccorso a{color:var(--inchiostro)}
+  footer{margin-top:22px;font-size:13px;color:var(--grigio);
+    font-family:ui-monospace,Consolas,monospace}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <radialGradient id="verdefondo" cx="34%" cy="30%" r="80%">
+    <stop offset="0%" stop-color="#2FBF63"/><stop offset="45%" stop-color="#16A34A"/>
+    <stop offset="100%" stop-color="#0E7C33"/></radialGradient>
+  <symbol id="lucchetto" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="11.2" fill="url(#verdefondo)"/>
+    <path d="M8.6 11.6 V9.6 a3.4 3.4 0 0 1 6.8 0 v2" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/>
+    <rect x="7.2" y="11.2" width="9.6" height="7.2" rx="1.6" fill="#fff"/>
+    <circle cx="12" cy="14" r="1.25" fill="#16A34A"/>
+    <path d="M12 14.4 L13.1 17 H10.9 Z" fill="#16A34A"/>
+  </symbol>
+</defs></svg>
+
+<div class="marchio"><svg aria-hidden="true"><use href="#lucchetto"/></svg>
+  <span class="nome">LOCKIT</span></div>
+
+<div class="carta-msg">
+  <h1>Lockit funziona dal computer</h1>
+  <p>Per custodire una cassaforte servono permessi sulle cartelle che i telefoni,
+     per ora, non concedono alle pagine web. Usa Lockit da un <b>computer</b>,
+     con <b>Chrome</b> o <b>Edge</b>: ritroverai qui la tua cassaforte quando i
+     telefoni saranno pronti.</p>
+  <p>Se dal telefono ti serve aprire un <b>singolo file protetto</b>, puoi farlo
+     col file di soccorso, sempre con la tua password.</p>
+  <p class="soccorso"><a href="#">File di soccorso</a></p>
+</div>
+
+<footer>Lockit MVP 0.1</footer>
+</body>
+</html>

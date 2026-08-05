@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lockit · Benvenuto</title>
+<style>
+  :root{
+    --carta:#F3F4F0; --pannello:#FFFFFF; --inchiostro:#232A33; --grigio:#5C6874;
+    --linea:#DCE0DA; --cartella:#F6BE2C; --cartella-testo:#946200;
+    --protetto:#16A34A; --protetto-bg:#E8F5EC;
+    --esposto:#DC2626; --esposto-bg:#FBEAEA;
+    --ambra:#D97706;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--carta); color:var(--inchiostro);
+    font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    min-height:100vh; display:flex; flex-direction:column}
+  .serif{font-family:Georgia,"Times New Roman",serif}
+  .mono{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:.86em;color:var(--grigio)}
+  button:focus-visible, a:focus-visible, input:focus-visible{outline:3px solid var(--cartella-testo); outline-offset:2px}
+
+  main{flex:1; display:flex; flex-direction:column; align-items:center; padding:34px 20px 30px}
+  footer{padding:14px 20px 20px; text-align:center; font-size:13.5px; color:var(--grigio)}
+  footer a{color:var(--inchiostro)}
+  footer .sep{margin:0 8px; color:var(--linea)}
+
+  /* ---------- passo 0: home ---------- */
+  .home{max-width:560px; width:100%; text-align:center}
+  .home .marchio{display:inline-flex; align-items:center; gap:14px; margin-bottom:18px}
+  .home .marchio svg{width:52px; height:52px}
+  .home .marchio .nome{font-family:Georgia,serif; font-size:44px; letter-spacing:.16em; font-weight:700}
+  .home h1{font-family:Georgia,serif; font-size:26px; font-weight:400; margin:0 0 14px}
+  .home .testo{color:var(--grigio); font-size:16.5px; margin:0 auto 8px; max-width:520px}
+  .home .onesta{color:var(--grigio); font-size:14px; margin:14px 0 26px}
+  .home .bottoni{display:flex; gap:14px; justify-content:center; flex-wrap:wrap}
+  .home .bottoni button{font:inherit; font-size:17px; border-radius:11px; padding:14px 26px; cursor:pointer}
+  .btn-pieno{background:var(--inchiostro); color:#fff; border:1px solid var(--inchiostro); font-weight:600}
+  .btn-vuoto{background:#fff; color:var(--inchiostro); border:1px solid var(--linea)}
+  .btn-vuoto:hover{border-color:var(--inchiostro)}
+
+  /* ---------- sezioni della home ---------- */
+  .sezione{margin-top:44px; text-align:left; border-top:1px solid var(--linea); padding-top:30px}
+  .sezione h2{font-size:22px; margin:0 0 16px; text-align:center}
+  .passi3{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px}
+  .passo3{background:var(--pannello); border:1px solid var(--linea); border-radius:12px;
+    padding:16px 14px; text-align:center}
+  .passo3 .badge{width:30px; height:30px; border-radius:50%; background:var(--inchiostro);
+    color:#fff; font-weight:700; display:flex; align-items:center; justify-content:center;
+    margin:0 auto 10px}
+  .passo3 h3{font-size:15.5px; margin:0 0 6px}
+  .passo3 p{font-size:13.5px; color:var(--grigio); margin:0; line-height:1.5}
+  .prosa{color:var(--grigio); font-size:15px; line-height:1.65; margin:0}
+  .domanda{margin-bottom:16px}
+  .domanda h3{font-size:15.5px; margin:0 0 4px}
+  .domanda p{font-size:14px; color:var(--grigio); margin:0; line-height:1.55}
+
+  /* ---------- carte dei passi ---------- */
+  .porta{max-width:470px; width:100%; background:var(--pannello); border:1px solid var(--linea);
+    border-radius:14px; padding:30px 30px 26px; box-shadow:0 8px 30px rgba(35,42,51,.07)}
+  .porta h2{font-family:Georgia,serif; font-size:23px; margin:0 0 4px; text-align:center}
+  .porta .sotto{color:var(--grigio); font-size:14.5px; margin:0 0 20px; text-align:center}
+  .passo-di{font-size:12px; letter-spacing:.06em; color:var(--grigio); text-align:center; margin:0 0 6px}
+
+  .avvertenza{background:#FDF6E7; border:1px solid #EAD9AE; border-left:4px solid var(--cartella-testo);
+    border-radius:10px; padding:11px 14px; font-size:14.5px; margin:0 0 18px; line-height:1.55}
+
+  .ricorda{background:var(--carta); border:1px solid var(--linea); border-radius:10px;
+    padding:11px 14px; font-size:14px; color:var(--grigio); margin:0 0 16px; line-height:1.55}
+
+  .etich{font-size:13px; color:var(--grigio); text-align:left; margin:0 0 5px}
+  .campo{position:relative; margin-bottom:12px}
+  .campo input{width:100%; font:inherit; font-size:17px; padding:12px 76px 12px 14px;
+    border:1px solid var(--linea); border-radius:10px; background:#fff}
+  .campo input.errore{border-color:var(--esposto)}
+  .campo .mostra{position:absolute; right:10px; top:50%; transform:translateY(-50%);
+    border:0; background:transparent; color:var(--grigio); cursor:pointer; font:inherit; font-size:13.5px; padding:4px 6px}
+
+  .metro{display:flex; align-items:center; gap:10px; margin:2px 0 14px}
+  .metro .tacche{display:flex; gap:5px; flex:1}
+  .metro .tacca{height:7px; border-radius:99px; background:var(--linea); flex:1}
+  .metro.l1 .tacca:nth-child(1){background:var(--esposto)}
+  .metro.l2 .tacca:nth-child(-n+2){background:var(--ambra)}
+  .metro.l3 .tacca:nth-child(-n+3){background:var(--protetto)}
+  .metro.l4 .tacca{background:var(--protetto)}
+  .metro .voce{font-size:13px; color:var(--grigio); min-width:86px; text-align:right}
+  .metro.l1 .voce{color:var(--esposto)}
+  .metro.l2 .voce{color:var(--ambra)}
+  .metro.l3 .voce{color:var(--protetto)}
+  .metro.l4 .voce{color:var(--protetto); font-weight:700}
+
+  .consiglio{font-size:13.5px; color:var(--grigio); margin:0 0 16px; line-height:1.5}
+  .msg-errore{color:var(--esposto); font-size:13.5px; margin:0 0 12px; display:none}
+  .msg-errore.visibile{display:block}
+
+  .firma{display:flex; gap:10px; align-items:flex-start; font-size:14.5px; margin:0 0 18px; text-align:left}
+  .firma input{width:18px; height:18px; margin-top:2px; flex:none; accent-color:var(--inchiostro)}
+
+  .avanti{width:100%; font:inherit; font-size:17px; font-weight:600; padding:13px;
+    background:var(--inchiostro); color:#fff; border:0; border-radius:10px; cursor:pointer}
+  .avanti:disabled{background:#B8BEC5; cursor:not-allowed}
+  .indietro{margin:16px 0 0; font-size:14.5px; text-align:center}
+  .indietro a{color:var(--inchiostro)}
+
+  .spiega{color:var(--grigio); font-size:15px; text-align:left; margin:0 0 18px; line-height:1.65}
+  .spiega b{color:var(--inchiostro)}
+  .spiega ol{margin:8px 0 0; padding-left:22px}
+  .spiega li{margin-bottom:6px}
+  .cartellina-mini{display:inline-block; width:18px; height:14px; position:relative; background:var(--cartella);
+    border-radius:2px; vertical-align:-2px; margin-right:6px}
+  .cartellina-mini::before{content:"";position:absolute;top:-3px;left:0;width:8px;height:4px;background:var(--cartella);border-radius:2px 2px 0 0}
+
+  /* ---------- passo finale: istantanea ---------- */
+  .fatta{max-width:640px; width:100%}
+  .successo{display:flex; align-items:center; gap:10px; justify-content:center;
+    color:var(--protetto); font-weight:600; font-size:16.5px; margin:0 0 16px}
+  .successo svg{width:22px; height:22px}
+  .istantanea{background:var(--pannello); border:1px solid var(--linea); border-radius:12px; overflow:hidden}
+  .ist-testata{display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--linea)}
+  .ist-testata svg{width:20px; height:20px}
+  .ist-testata .nome{font-family:Georgia,serif; font-weight:700; letter-spacing:.14em; font-size:15px}
+  .ist-testata .cass{margin-left:auto; text-align:right}
+  .ist-testata .cass .e{font-size:10px; letter-spacing:.06em; color:var(--grigio)}
+  .ist-testata .cass .v{font-family:Georgia,serif; font-size:14px}
+  .ist-vuoto{padding:46px 24px; text-align:center; color:var(--grigio); font-size:15.5px; line-height:1.65}
+  .ist-vuoto .cartellina-mini{width:30px; height:23px; margin:0 auto 12px; display:block}
+  .ist-vuoto .cartellina-mini::before{width:13px; height:6px; top:-5px}
+  .entra{display:block; margin:20px auto 0; font:inherit; font-size:17px; font-weight:600; padding:13px 34px;
+    background:var(--inchiostro); color:#fff; border:0; border-radius:10px; cursor:pointer}
+
+  .demo-nota{margin:16px 0 0; font-size:12.5px; color:var(--grigio); font-style:italic; text-align:center}
+  .demo-nota a{color:var(--grigio)}
+
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <radialGradient id="verdefondo" cx="34%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#2FBF63"/><stop offset="45%" stop-color="#16A34A"/>
+      <stop offset="100%" stop-color="#0E7C33"/>
+    </radialGradient>
+    <symbol id="lucchetto" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="11.2" fill="url(#verdefondo)"/>
+      <path d="M8.6 11.6 V9.6 a3.4 3.4 0 0 1 6.8 0 v2" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/>
+      <rect x="7.2" y="11.2" width="9.6" height="7.2" rx="1.6" fill="#fff"/>
+      <circle cx="12" cy="14" r="1.25" fill="#16A34A"/>
+      <path d="M12 14.4 L13.1 17 H10.9 Z" fill="#16A34A"/>
+    </symbol>
+  </defs>
+</svg>
+
+<main>
+
+  <!-- ============ PASSO 0 · HOME ============ -->
+  <div class="home" id="p-home">
+    <div class="marchio">
+      <svg aria-hidden="true"><use href="#lucchetto"/></svg>
+      <span class="nome serif">LOCKIT</span>
+    </div>
+    <h1>La cassaforte per i file che contano</h1>
+    <p class="testo">Lockit protegge i file di una tua cartella, sottocartelle comprese: sul
+      computer o dentro Dropbox e Google Drive, con una password che conosci solo tu.
+      Niente account, niente programmi da installare, niente da pagare: e se la cartella è nel cloud,
+      apri i tuoi file da qualsiasi computer, con la sola password.</p>
+    <p class="onesta">Funziona dal computer, con Chrome o Edge. La password non si può recuperare:
+      custodiscila bene.</p>
+    <div class="bottoni">
+      <button class="btn-vuoto" id="btn-accedi" title="Nel prodotto porta alla pagina di accesso">Accedi</button>
+      <button class="btn-pieno" id="btn-crea">Crea la tua cassaforte</button>
+    </div>
+
+    <section class="sezione" id="come-funziona">
+      <h2 class="serif">Come funziona</h2>
+      <div class="passi3">
+        <div class="passo3"><div class="badge">1</div>
+          <h3>Scegli una password</h3>
+          <p>Sarà l'unica chiave della cassaforte: la conosci solo tu.</p></div>
+        <div class="passo3"><div class="badge">2</div>
+          <h3>Indica una cartella</h3>
+          <p>Sul computer, o dentro Dropbox e Google Drive: quella cartella diventa la tua cassaforte.</p></div>
+        <div class="passo3"><div class="badge">3</div>
+          <h3>Proteggi i tuoi file</h3>
+          <p>Un clic e diventano illeggibili per chiunque non abbia la password. Un altro clic e tornano leggibili.</p></div>
+      </div>
+    </section>
+
+    <section class="sezione" id="sicurezza">
+      <h2 class="serif">Niente esce dal tuo computer</h2>
+      <p class="prosa">Lockit è un sistema «zero-knowledge»: la protezione avviene tutta sul tuo
+        computer. I tuoi file non vengono caricati da nessuna parte: restano nella loro cartella
+        e vengono protetti sul posto. E la password non è registrata da nessuna parte: né da
+        noi, né da Google. È il motivo per cui nessun estraneo può leggere i tuoi file; ed è anche
+        il motivo per cui, se la dimentichi, nessuno può recuperarla.</p>
+    </section>
+
+    <section class="sezione" id="verifica">
+      <h2 class="serif">Per chi vuole verificare</h2>
+      <p class="prosa">Per proteggere i file, Lockit usa cifratura moderna e riconosciuta
+        (XChaCha20-Poly1305, con la password rafforzata da Argon2id): la classe di
+        strumenti dei gestori di password professionali. E il codice che esegue la protezione
+        è <b>aperto</b>: chiunque può leggerlo, controllarlo e verificarlo, riga per riga.
+        <a href="#" id="vedi-codice">Guarda il codice</a>.</p>
+    </section>
+
+  </div>
+
+  <!-- ============ PASSO 1 · PASSWORD ============ -->
+  <div class="porta" id="p-password" hidden>
+    <p class="passo-di">PASSO 1 DI 2</p>
+    <h2>Scegli la password</h2>
+    <p class="sotto">Sarà l'unica chiave della tua cassaforte</p>
+
+    <div class="ricorda" id="ricorda" hidden>Il browser può ricordare una cassaforte alla volta:
+      d'ora in poi ricorderà questa nuova. «Documenti di casa» non viene cancellata: resta sul
+      disco con tutti i suoi file protetti, che potrai sempre aprire con la sua password.</div>
+
+    <div class="avvertenza">Questa password <b>non si può recuperare</b>: se la dimentichi,
+      i file protetti resteranno chiusi per sempre. Conservala in un posto sicuro.</div>
+
+    <p class="etich">Scegli una password sicura</p>
+    <div class="campo">
+      <input type="password" id="pw1" aria-label="La tua password">
+      <button class="mostra" id="mostra-1">Mostra</button>
+    </div>
+    <div class="metro" id="metro">
+      <div class="tacche"><div class="tacca"></div><div class="tacca"></div><div class="tacca"></div><div class="tacca"></div></div>
+      <span class="voce" id="metro-voce">&nbsp;</span>
+    </div>
+
+    <p class="etich">Riscrivila per conferma</p>
+    <div class="campo">
+      <input type="password" id="pw2" aria-label="Riscrivi la password per conferma">
+      <button class="mostra" id="mostra-2">Mostra</button>
+    </div>
+    <p class="msg-errore" id="err-uguali">Le due password non coincidono.</p>
+
+
+    <label class="firma"><input type="checkbox" id="firma">
+      <span>Ho capito: se dimentico la password, nessuno potrà recuperare i miei file.</span></label>
+
+    <button class="avanti" id="avanti-1" disabled>Continua</button>
+    <p class="indietro"><a href="#" id="torna-home">← Torna all'inizio</a></p>
+  </div>
+
+  <!-- ============ PASSO 2 · DOVE VIVRÀ ============ -->
+  <div class="porta" id="p-cartella" hidden>
+    <p class="passo-di">PASSO 2 DI 2</p>
+    <h2>Dove vivrà la tua cassaforte</h2>
+    <p class="sotto">Una cartella, creata da te, col nome che vuoi</p>
+
+    <p class="spiega"><span class="cartellina-mini" aria-hidden="true"></span>Al clic si aprirà
+      la finestra di Chrome:
+      <ol>
+        <li>vai dove vuoi tenerla (Documenti, Dropbox, Google Drive…);</li>
+        <li>premi <b>«Nuova cartella»</b> e dalle il nome che preferisci:
+            sarà il <b>nome della tua cassaforte</b>;</li>
+        <li>premi <b>«Seleziona cartella»</b>, e quando Chrome chiede il permesso
+            premi <b>«Salva le modifiche»</b>.</li>
+      </ol>
+    </p>
+
+    <button class="avanti" id="scegli-dove">Scegli dove crearla…</button>
+    <p class="indietro"><a href="#" id="torna-password">← Torna alla password</a></p>
+  </div>
+
+  <!-- ============ PASSO 3 · PRONTA ============ -->
+  <div class="fatta" id="p-fatta" hidden>
+    <p class="successo"><svg aria-hidden="true"><use href="#lucchetto"/></svg>
+      La cassaforte «Documenti di casa» è pronta</p>
+    <div class="istantanea" aria-label="Anteprima della pagina della cassaforte">
+      <div class="ist-testata">
+        <svg aria-hidden="true"><use href="#lucchetto"/></svg>
+        <span class="nome serif">LOCKIT</span>
+        <span class="cass"><span class="e">CASSAFORTE</span><br><span class="v serif">Documenti di casa</span></span>
+      </div>
+      <div class="ist-vuoto">
+        <span class="cartellina-mini" aria-hidden="true"></span>
+        La tua cassaforte è vuota.<br>Copia qui i tuoi file da Esplora risorse e poi proteggili.
+      </div>
+    </div>
+    <button class="entra" id="entra" title="Nel prodotto apre la pagina della cassaforte">Entra nella cassaforte</button>
+    <p class="demo-nota"><a href="#" id="ricomincia">Anteprima di bozzetto: ricomincia dall'inizio</a></p>
+  </div>
+
+  <p class="demo-nota" id="nota-ricorda-riga" hidden>
+    <a href="#" id="anteprima-ricorda">Anteprima di bozzetto: se il browser ricorda già una cassaforte</a></p>
+
+</main>
+
+<footer>
+  <a href="#">File di soccorso</a><span class="sep">·</span><span class="mono">Lockit MVP 0.1</span>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  function $(id){return document.getElementById(id)}
+
+  var PASSI=["p-home","p-password","p-cartella","p-fatta"];
+  function vai(id){
+    PASSI.forEach(function(p){ $(p).hidden = (p!==id); });
+    $("nota-ricorda-riga").hidden = (id!=="p-password");
+    window.scrollTo(0,0);
+  }
+
+  $("btn-crea").onclick=function(){ vai("p-password"); };
+  $("torna-home").onclick=function(e){e.preventDefault(); vai("p-home");};
+  $("torna-password").onclick=function(e){e.preventDefault(); vai("p-password");};
+  $("scegli-dove").onclick=function(){ vai("p-fatta"); };
+  $("ricomincia").onclick=function(e){e.preventDefault(); vai("p-home");};
+  $("anteprima-ricorda").onclick=function(e){e.preventDefault(); $("ricorda").hidden=!$("ricorda").hidden;};
+
+  /* mostra/nascondi */
+  function toggia(inputId,btnId){
+    var i=$(inputId), b=$(btnId);
+    b.onclick=function(){
+      var chiaro = i.type==="text";
+      i.type = chiaro ? "password" : "text";
+      b.textContent = chiaro ? "Mostra" : "Nascondi";
+    };
+  }
+  toggia("pw1","mostra-1"); toggia("pw2","mostra-2");
+
+  /* misuratore a 4 livelli, due scale: lettere e sole cifre */
+  function livello(v){
+    var n=v.length;
+    if(n===0) return 0;
+    if(/^[0-9]+$/.test(v)) return n<=8?1 : n<=11?2 : n<=14?3 : 4;   /* sole cifre */
+    return n<=5?1 : n<=8?2 : n<=11?3 : 4;                            /* almeno una lettera/simbolo */
+  }
+  var VOCI=["\u00a0","Debole","Giusta","Buona","Forte"];
+  function aggiornaMetro(){
+    var l=livello($("pw1").value);
+    $("metro").className="metro"+(l?" l"+l:"");
+    $("metro-voce").textContent=VOCI[l];
+    valuta();
+  }
+
+  /* Continua: almeno "Giusta" della scala attiva + coincidenza + firma */
+  function valuta(){
+    var p1=$("pw1").value, p2=$("pw2").value;
+    var ok = livello(p1)>=2 && p1===p2 && $("firma").checked;
+    $("avanti-1").disabled = !ok;
+    if(p2 && p1!==p2){ $("pw2").classList.add("errore"); $("err-uguali").classList.add("visibile"); }
+    else { $("pw2").classList.remove("errore"); $("err-uguali").classList.remove("visibile"); }
+  }
+  $("pw1").addEventListener("input",aggiornaMetro);
+  $("pw2").addEventListener("input",valuta);
+  $("firma").addEventListener("change",valuta);
+  $("avanti-1").onclick=function(){ if(!this.disabled) vai("p-cartella"); };
+})();
+</script>
+
+<!-- ===== Lockit app: aggiunta in coda, tela intatta (C6) ===== -->
+<script type="importmap">{"imports":{
+ "libsodium-wrappers-sumo":"./node_modules/libsodium-wrappers-sumo/dist/modules-sumo-esm/libsodium-wrappers.mjs",
+ "libsodium-sumo":"./node_modules/libsodium-sumo/dist/modules-sumo-esm/libsodium-sumo.mjs"}}</script>
+<script type="module" src="./app.mjs"></script>
+</body>
+</html>

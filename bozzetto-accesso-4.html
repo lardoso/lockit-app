@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lockit · Accedi</title>
+<style>
+  :root{
+    --carta:#F3F4F0; --pannello:#FFFFFF; --inchiostro:#232A33; --grigio:#5C6874;
+    --linea:#DCE0DA; --cartella:#F6BE2C; --cartella-testo:#946200;
+    --protetto:#16A34A; --protetto-bg:#E8F5EC;
+    --esposto:#DC2626; --esposto-bg:#FBEAEA;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--carta); color:var(--inchiostro);
+    font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    min-height:100vh; display:flex; flex-direction:column}
+  .serif{font-family:Georgia,"Times New Roman",serif}
+  .mono{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:.86em;color:var(--grigio)}
+  button:focus-visible, a:focus-visible, input:focus-visible{outline:3px solid var(--cartella-testo); outline-offset:2px}
+
+  header{padding:26px 20px 0; text-align:center}
+  .marchio{display:inline-flex; align-items:center; gap:10px}
+  .marchio .nome{font-family:Georgia,serif; font-size:26px; letter-spacing:.16em; font-weight:700}
+  .lucchetto-logo{width:28px; height:28px; flex:none}
+
+  main{flex:1; display:flex; flex-direction:column; align-items:center; padding:26px 20px 30px}
+
+  /* avviso di inattività */
+  .avviso{max-width:440px; width:100%; background:var(--pannello); border:1px solid var(--linea);
+    border-left:4px solid var(--cartella-testo); border-radius:10px; padding:12px 40px 12px 14px;
+    margin-bottom:18px; position:relative; font-size:15px}
+  .avviso .sotto{display:block; font-size:13px; color:var(--grigio); margin-top:3px}
+  .avviso .via{position:absolute; top:8px; right:10px; border:0; background:transparent;
+    font-size:18px; color:var(--grigio); cursor:pointer; padding:4px}
+
+  /* carta centrale */
+  .porta{max-width:440px; width:100%; background:var(--pannello); border:1px solid var(--linea);
+    border-radius:14px; padding:32px 30px 26px; text-align:center;
+    box-shadow:0 8px 30px rgba(35,42,51,.07)}
+  .porta .segno{width:56px; height:56px; margin:0 auto 14px; display:block}
+  .porta h1{font-family:Georgia,serif; font-size:25px; margin:0 0 4px; letter-spacing:.02em}
+  .porta .dove{color:var(--grigio); font-size:14.5px; margin:0 0 22px}
+
+  .campo{position:relative; margin-bottom:6px}
+  .campo input{width:100%; font:inherit; font-size:17px; padding:13px 76px 13px 14px;
+    border:1px solid var(--linea); border-radius:10px; background:#fff}
+  .campo input.errore{border-color:var(--esposto)}
+  .campo .mostra{position:absolute; right:10px; top:50%; transform:translateY(-50%);
+    border:0; background:transparent; color:var(--grigio); cursor:pointer; font:inherit; font-size:13.5px; padding:4px 6px}
+  .campo .mostra:hover{color:var(--inchiostro)}
+  .msg-errore{color:var(--esposto); font-size:13.5px; text-align:left; margin:0 0 10px; display:none}
+  .msg-errore.visibile{display:block}
+
+  .apri{width:100%; font:inherit; font-size:17px; font-weight:600; padding:13px;
+    background:var(--inchiostro); color:#fff; border:0; border-radius:10px; cursor:pointer; margin-top:6px}
+  .apri:hover{background:#111820}
+
+  .link-onesto{margin-top:16px; font-size:14.5px}
+  .link-onesto a{color:var(--inchiostro)}
+  .divisore{border:0; border-top:1px solid var(--linea); margin:22px 0 16px}
+  .cambia{font-size:14.5px}
+  .cambia a{color:var(--inchiostro)}
+
+  /* stato 2: indica la cartella */
+  .spiega{color:var(--grigio); font-size:14.5px; text-align:left; margin:0 0 18px; line-height:1.6}
+  .spiega b{color:var(--inchiostro)}
+  .scegli{width:100%; font:inherit; font-size:16.5px; font-weight:600; padding:13px;
+    background:var(--inchiostro); color:#fff; border:0; border-radius:10px; cursor:pointer}
+  .rassicura{font-size:13px; color:var(--grigio); margin:14px 0 0; line-height:1.55}
+  .indietro{margin-top:16px; font-size:14.5px}
+  .indietro a{color:var(--inchiostro)}
+  .demo-nota{margin:16px 0 0; font-size:12.5px; color:var(--grigio); font-style:italic}
+  .demo-nota a{color:var(--grigio)}
+  .scialuppa{margin:16px 0 0; font-size:13.5px; color:var(--grigio)}
+  .scialuppa a{color:var(--inchiostro)}
+  .cartellina-mini{display:inline-block; width:18px; height:14px; position:relative; background:var(--cartella);
+    border-radius:2px; vertical-align:-2px; margin-right:6px}
+  .cartellina-mini::before{content:"";position:absolute;top:-3px;left:0;width:8px;height:4px;background:var(--cartella);border-radius:2px 2px 0 0}
+
+  footer{padding:14px 20px 20px; text-align:center; font-size:13.5px; color:var(--grigio)}
+  footer a{color:var(--inchiostro)}
+  footer .sep{margin:0 8px; color:var(--linea)}
+
+  /* finestre */
+  .velo{position:fixed; inset:0; background:rgba(35,42,51,.45); display:none; z-index:60}
+  .velo.aperto{display:block}
+  .finestra{position:fixed; z-index:61; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:min(500px, calc(100vw - 32px)); background:var(--pannello); border:1px solid var(--linea);
+    border-radius:14px; padding:24px 26px; box-shadow:0 18px 60px rgba(35,42,51,.25); display:none;
+    text-align:left}
+  .finestra.aperta{display:block}
+  .finestra .chiudi{position:absolute; top:10px; right:12px; border:0; background:transparent;
+    font-size:22px; cursor:pointer; color:var(--grigio); padding:6px}
+  .finestra h2{font-family:Georgia,serif; font-size:21px; margin:0 0 10px}
+  .finestra p{font-size:15.5px; margin:10px 0 0; line-height:1.6}
+  .fin-azioni{display:flex; gap:10px; margin-top:20px; justify-content:flex-end}
+  .fin-azioni button{font:inherit; border-radius:9px; padding:10px 16px; cursor:pointer;
+    background:var(--inchiostro); color:#fff; border:1px solid var(--inchiostro)}
+
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <radialGradient id="verdefondo" cx="34%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#2FBF63"/><stop offset="45%" stop-color="#16A34A"/>
+      <stop offset="100%" stop-color="#0E7C33"/>
+    </radialGradient>
+    <symbol id="lucchetto" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="11.2" fill="url(#verdefondo)"/>
+      <path d="M8.6 11.6 V9.6 a3.4 3.4 0 0 1 6.8 0 v2" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/>
+      <rect x="7.2" y="11.2" width="9.6" height="7.2" rx="1.6" fill="#fff"/>
+      <circle cx="12" cy="14" r="1.25" fill="#16A34A"/>
+      <path d="M12 14.4 L13.1 17 H10.9 Z" fill="#16A34A"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header>
+  <div class="marchio">
+    <svg class="lucchetto-logo" aria-hidden="true"><use href="#lucchetto"/></svg>
+    <span class="nome serif">LOCKIT</span>
+  </div>
+</header>
+
+<main>
+
+  <div class="avviso" id="avviso" role="status">
+    Sei uscito per inattività, accedi di nuovo.
+    <span class="sotto">Puoi modificare il timer di inattività dalla pagina della cassaforte.</span>
+    <button class="via" id="avviso-via" aria-label="Chiudi l'avviso">×</button>
+  </div>
+
+  <!-- ============ STATO 1 · cassaforte ricordata: solo password ============ -->
+  <div class="porta" id="stato-password">
+    <svg class="segno" aria-hidden="true"><use href="#lucchetto"/></svg>
+    <h1 id="nome-cassaforte">Documenti di casa</h1>
+    <p class="dove">La tua cassaforte, ricordata su questo browser</p>
+
+    <div class="campo">
+      <input type="password" id="password" placeholder="La tua password" aria-label="Password della cassaforte">
+      <button class="mostra" id="mostra">Mostra</button>
+    </div>
+    <p class="msg-errore" id="msg-errore">Scrivi la tua password.</p>
+
+    <button class="apri" id="apri">Apri la cassaforte</button>
+
+    <p class="link-onesto"><a href="#" id="dimenticata">Hai dimenticato la password?</a></p>
+
+  </div>
+
+  <!-- ============ STATO 2 · indica la cartella (PC nuovo / cambio) ============ -->
+  <div class="porta" id="stato-cartella" hidden>
+    <svg class="segno" aria-hidden="true"><use href="#lucchetto"/></svg>
+    <h1>Indica la tua cassaforte</h1>
+    <p class="dove">Serve solo la prima volta: poi il browser la ricorderà</p>
+
+    <p class="spiega">
+      <span class="cartellina-mini" aria-hidden="true"></span>Scegli la <b>cartella</b> che contiene i tuoi file protetti
+      (per esempio dentro Documenti, Dropbox o Google Drive).<br>
+      Chrome ti chiederà il permesso: premi <b>«Salva le modifiche»</b>.
+    </p>
+
+    <button class="scegli" id="scegli">Scegli la cartella…</button>
+
+    <p class="scialuppa">Non hai ancora una cassaforte? <a href="#">Creala dalla pagina iniziale</a>.</p>
+
+  </div>
+
+  <!-- ============ STATO 3 · cartella scelta: password della nuova ============ -->
+  <div class="porta" id="stato-password-2" hidden>
+    <svg class="segno" aria-hidden="true"><use href="#lucchetto"/></svg>
+    <h1 id="nome-cassaforte-2">Documenti di casa</h1>
+    <p class="dove">Cartella indicata: ora la sua password</p>
+
+    <div class="campo">
+      <input type="password" id="password-2" placeholder="La password di questa cassaforte" aria-label="Password della cassaforte scelta">
+      <button class="mostra" id="mostra-2">Mostra</button>
+    </div>
+    <p class="msg-errore" id="msg-errore-2">Scrivi la password di questa cassaforte.</p>
+
+    <button class="apri" id="apri-2">Apri la cassaforte</button>
+
+    <p class="link-onesto"><a href="#" id="dimenticata-2">Hai dimenticato la password?</a></p>
+    <p class="indietro"><a href="#" id="torna-2">← Scegli un'altra cartella</a></p>
+  </div>
+
+  <p class="demo-nota"><a href="#" id="demo-toggle">Anteprima di bozzetto: la pagina come appare su un PC nuovo</a></p>
+</main>
+
+<footer>
+  <a href="#">File di soccorso</a><span class="sep">·</span><span class="mono">Lockit MVP 0.1</span>
+</footer>
+
+<!-- ============ finestra onesta ============ -->
+<div class="velo" id="velo"></div>
+<div class="finestra" id="onesta" role="dialog" aria-modal="true">
+  <button class="chiudi" data-chiudi aria-label="Chiudi">×</button>
+  <h2>Hai dimenticato la password?</h2>
+  <p>Lockit è un sistema «zero-knowledge»: significa che la tua password la conosci soltanto tu.
+     Non è registrata da nessuna parte: né da noi, né da Google, né dentro Chrome; la protezione
+     avviene tutta sul tuo computer, senza alcun account. È proprio questo il motivo per cui
+     nessun estraneo può leggere i tuoi file.</p>
+  <p>Per la stessa ragione, <b>nessuno può recuperarla</b>. Non esiste un modulo, un'assistenza
+     o un trucco: i file protetti si aprono solo con la password esatta.</p>
+  <p>Nemmeno il file di soccorso serve in questo caso: apre i file senza bisogno del sito,
+     ma sempre con la password.</p>
+  <p>Cosa puoi fare: prova con calma le varianti che usi di solito (maiuscole, numeri in fondo,
+     vecchie abitudini). Se hai copie dei file fatte <b>quando erano ancora leggibili</b>
+     (un backup, una chiavetta), quelle funzionano normalmente.</p>
+  <div class="fin-azioni"><button data-chiudi>Ho capito</button></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  function $(id){return document.getElementById(id)}
+
+  /* avviso di inattività */
+  $("avviso-via").onclick=function(){ $("avviso").remove(); };
+
+  /* stati */
+  function mostraStato(id){
+    ["stato-password","stato-cartella","stato-password-2"].forEach(function(s){
+      $(s).hidden = (s!==id);
+    });
+    $("demo-toggle").textContent = (id==="stato-password")
+      ? "Anteprima di bozzetto: la pagina come appare su un PC nuovo"
+      : "Anteprima di bozzetto: torna alla pagina normale";
+  }
+  $("scegli").onclick=function(){ mostraStato("stato-password-2"); };
+  $("demo-toggle").onclick=function(e){
+    e.preventDefault();
+    var normale = !$("stato-password").hidden;
+    mostraStato(normale ? "stato-cartella" : "stato-password");
+  };
+  $("torna-2").onclick=function(e){e.preventDefault(); mostraStato("stato-cartella");};
+
+  /* mostra/nascondi password */
+  function toggia(inputId,btnId){
+    var i=$(inputId), b=$(btnId);
+    b.onclick=function(){
+      var chiaro = i.type==="text";
+      i.type = chiaro ? "password" : "text";
+      b.textContent = chiaro ? "Mostra" : "Nascondi";
+    };
+  }
+  toggia("password","mostra");
+  toggia("password-2","mostra-2");
+
+  /* apertura dimostrativa: campo vuoto = errore rosso */
+  function apriDemo(inputId,msgId){
+    var i=$(inputId), m=$(msgId);
+    if(i.value.trim()===""){
+      i.classList.add("errore"); m.classList.add("visibile"); i.focus();
+      return;
+    }
+    i.classList.remove("errore"); m.classList.remove("visibile");
+  }
+  $("apri").onclick=function(){ apriDemo("password","msg-errore"); };
+  $("apri-2").onclick=function(){ apriDemo("password-2","msg-errore-2"); };
+  $("password").addEventListener("input",function(){ this.classList.remove("errore"); $("msg-errore").classList.remove("visibile"); });
+  $("password-2").addEventListener("input",function(){ this.classList.remove("errore"); $("msg-errore-2").classList.remove("visibile"); });
+
+  /* finestra onesta */
+  var velo=$("velo");
+  function apriFin(el){velo.classList.add("aperto"); el.classList.add("aperta");}
+  function chiudiFin(){velo.classList.remove("aperto");
+    document.querySelectorAll(".finestra").forEach(function(f){f.classList.remove("aperta");});}
+  document.querySelectorAll("[data-chiudi]").forEach(function(b){b.onclick=chiudiFin;});
+  velo.onclick=chiudiFin;
+  document.addEventListener("keydown",function(e){if(e.key==="Escape") chiudiFin();});
+  $("dimenticata").onclick=function(e){e.preventDefault(); apriFin($("onesta"));};
+  $("dimenticata-2").onclick=function(e){e.preventDefault(); apriFin($("onesta"));};
+})();
+</script>
+</body>
+</html>
