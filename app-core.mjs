@@ -11,14 +11,15 @@ const base = (p) => p.split("/").pop();
 export async function apriCassaforte(ambiente, password, spia = () => {}) {
   // ---- PREFLIGHT strutturale (senza password) ----
   const files = await ambiente.elencaELeggi();      // [{path, bytes} | {path, erroreAccesso}]
+  const filesVisti = files.map(f => f.path + (f.erroreAccesso ? " (illeggibile)" : ""));
   const cens = censisci(files);
   spia({ fase: "preflight", cens });
   const quadro = { classificazioneCompleta: false };
   if (cens.errori?.length) quadro.erroriAccesso = cens.errori;
-  if (cens.riga === 2) { quadro.versioneFutura = cens.dove; quadro.classificazioneCompleta = true; return { esito: decidi(quadro), quadro }; }
-  if (cens.riga === "1e-rigida") { quadro.budgetPrelettureSuperato = true; quadro.classificazioneCompleta = true; return { esito: decidi(quadro), quadro }; }
-  if (cens.riga === "1e") { quadro.oltreGli8 = true; quadro.classificazioneCompleta = true; return { esito: decidi(quadro), quadro }; }
-  if (cens.riga === 1 || quadro.erroriAccesso) { quadro.classificazioneCompleta = true; return { esito: decidi(quadro), quadro }; }
+  if (cens.riga === 2) { quadro.versioneFutura = cens.dove; quadro.classificazioneCompleta = true; return { esito: decidi(quadro), quadro, filesVisti }; }
+  if (cens.riga === "1e-rigida") { quadro.budgetPrelettureSuperato = true; quadro.classificazioneCompleta = true; return { esito: decidi(quadro), quadro, filesVisti }; }
+  if (cens.riga === "1e") { quadro.oltreGli8 = true; quadro.classificazioneCompleta = true; return { esito: decidi(quadro), quadro, filesVisti }; }
+  if (cens.riga === 1 || quadro.erroriAccesso) { quadro.classificazioneCompleta = true; return { esito: decidi(quadro), quadro, filesVisti }; }
   // ---- strutture dei candidati ----
   const strutture = []; const malformati = [];
   for (const f of cens.candidati) {
@@ -27,7 +28,7 @@ export async function apriCassaforte(ambiente, password, spia = () => {}) {
     else strutture.push({ path: f.path, struct: st, bytes: f.bytes, digestHex: await digestHex(f.bytes) });
   }
   const piano = pianificaGruppi(strutture);
-  if (piano.oltreIGruppi) { quadro.oltreIGruppi = true; quadro.classificazioneCompleta = true; return { esito: decidi(quadro), quadro }; }
+  if (piano.oltreIGruppi) { quadro.oltreIGruppi = true; quadro.classificazioneCompleta = true; return { esito: decidi(quadro), quadro, filesVisti }; }
   // ---- FASE 1: derivazioni nell'ordine normativo, stop al primo autentico ----
   const autentici = []; const nonAutentici = [];
   let passwordAccettata = false; let risorseKdf = false;
@@ -63,5 +64,5 @@ export async function apriCassaforte(ambiente, password, spia = () => {}) {
   if (!strutture.length && !malformati.length && !opachi.length) quadro.percorsoSenzaTracce = true;
   quadro.servizioAssente = !canonicoFile && (quadro.blobAutenticati > 0);
   quadro.classificazioneCompleta = true;
-  return { esito: decidi(quadro), quadro, passwordAccettata, autentici: autentici.map(a => a.path) };
+  return { esito: decidi(quadro), quadro, passwordAccettata, autentici: autentici.map(a => a.path), filesVisti };
 }
