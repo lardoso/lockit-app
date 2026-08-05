@@ -50,6 +50,7 @@ const UMANI = {
   1:        { t: "Non riesco a leggere tutta la cartella", s: "Alcuni file non si lasciano leggere (forse un altro programma li tiene occupati). Chiudi gli altri programmi e riprova." },
   "1b":     { t: "Memoria insufficiente per la verifica", s: "Il computer non ha abbastanza memoria libera per controllare la password. Chiudi altre attività o prova da un dispositivo con più memoria." },
   "1c":     { t: "C'è un intruso al posto del file di servizio", s: "Il nome riservato della cassaforte è occupato da qualcosa che non riconosco. Va messo da parte prima di continuare." },
+  "1c-pw":  { t: "Questo file non risponde alla password", s: "Al posto riservato c'è un file che assomiglia a una cassaforte, ma non si apre con questa password. Se la cassaforte è tua, controlla la password e riprova. Se non è tua, andrà messa da parte prima di continuare." },
   "1d":     { t: "Troppi materiali diversi in questa cartella", s: "Ci sono troppe famiglie di file da verificare. Metti da parte quelli che non c'entrano e riprova." },
   "1e":     { t: "Troppi file da verificare", s: "Ci sono troppi materiali da controllare in una volta. Mettine da parte qualcuno e riprova." },
   "1e-rigida": { t: "Troppi file da esaminare", s: "Per sicurezza non tocco nulla finché non rientri: sposta via qualche materiale con Esplora risorse e rifai la scansione." },
@@ -62,12 +63,14 @@ function schermataStato(sh, esito, filesVisti) {
   let box = sh.getElementById("app-stato");
   if (!box) { box = document.createElement("div"); box.id = "app-stato";
     sh.querySelector("main")?.appendChild(box); }
-  const chiave = (esito.riga === 7 && !esito.messaggio.includes("password")) ? "7bis" : esito.riga;
+  let chiave = (esito.riga === 7 && !esito.messaggio.includes("password")) ? "7bis" : esito.riga;
+  if (esito.riga === "1c" && esito.dettagli?.avvertenzaPlausibile) chiave = "1c-pw"; // D12-3
   const u = UMANI[chiave] ?? { t: "Qualcosa non torna", s: esito.messaggio };
   box.style.cssText = "margin:16px auto;max-width:560px;padding:18px 20px;border:2px solid " + (u.verde ? "#1a7f4e" : "#b98a1f") + ";border-radius:14px;background:" + (u.verde ? "#f2fbf6" : "#fdf8ec") + ";font-family:inherit;text-align:center";
-  const az = esito.azioni.map(a => `<button data-azione="${a}" style="margin:4px;padding:8px 12px">${a.replaceAll("_", " ")}</button>`).join("");
+  // UX-1 (regola di prodotto, 06/08): le azioni NON si mostrano finche' non sono cablate.
+  // I dati (esito.azioni) restano disponibili per il T5.
   box.innerHTML = `<strong style="font-size:17px;display:block;margin-bottom:6px">${u.t}</strong>` +
-    `<span style="display:block;margin:0 0 10px;line-height:1.45">${u.s}</span>` + az +
+    `<span style="display:block;margin:0 0 10px;line-height:1.45">${u.s}</span>` +
     `<span style="display:block;margin-top:12px;font-size:11px;color:#8a8f96">codice per l'assistenza: ${esito.stato} · riga ${esito.riga}</span>` +
     (!u.verde && filesVisti?.length ? `<details style="margin-top:8px;text-align:left;font-size:11px;color:#8a8f96"><summary style="cursor:pointer">cosa ho visto in questa cartella (${filesVisti.length} voci)</summary><div style="margin-top:6px;white-space:pre-wrap">${filesVisti.join("\n")}</div></details>` : "");
 }
