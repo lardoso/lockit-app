@@ -1,4 +1,5 @@
 // Adattatore d'ambiente per il browser (File System Access API)
+import { CANONICO } from "./aggregato.mjs";
 export function ambienteBrowser() {
   let dirHandle = null;
   return {
@@ -17,6 +18,15 @@ export function ambienteBrowser() {
         }
       }
       await giro(dirHandle, "");
+      // T4-4: l'enumerazione di Chrome SALTA i file che iniziano col punto.
+      // Il canonico pero' lo conosciamo per NOME: sonda diretta sulla radice.
+      if (!out.some(f => f.path === CANONICO)) {
+        try {
+          const fh = await dirHandle.getFileHandle(CANONICO);
+          const f = await fh.getFile();
+          out.push({ path: CANONICO, bytes: new Uint8Array(await f.arrayBuffer()) });
+        } catch { /* davvero assente: nessun canonico */ }
+      }
       return out;
     },
   };
