@@ -9,7 +9,7 @@ export function ambienteBrowser() {
       async function giro(h, prefisso) {
         for await (const [nome, voce] of h.entries()) {
           const p = prefisso ? prefisso + "/" + nome : nome;
-          if (voce.kind === "directory" && nome === ".~lockit-quarantena") continue; // G3
+          if (voce.kind === "directory" && nome === "_lockit-quarantena") continue; // G3
           if (voce.kind === "directory") await giro(voce, p);
           else {
             try { const f = await voce.getFile(); out.push({ path: p, bytes: new Uint8Array(await f.arrayBuffer()) }); }

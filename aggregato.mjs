@@ -6,14 +6,14 @@ import sodium from "libsodium-wrappers-sumo";
 import { parseStructural, HDR_BUDGET } from "./servizio.mjs";
 const te = (s) => new TextEncoder().encode(s);
 export const RE_OPACO = /^[0123456789abcdefghjkmnpqrstvwxyz]{32}\.lockit$/;
-export const CANONICO = ".~lockit-cassaforte";          // sez.4: nome canonico
-const RE_SCHEMI_INTERNI = /^\.~lockit-(tmp-|txn-)/;      // temporanei e manifesti
+export const CANONICO = "_lockit-cassaforte";          // sez.4: nome canonico
+const RE_SCHEMI_INTERNI = /^_lockit-(tmp-|txn-)/;      // temporanei e manifesti
 export function isCandidato(path, bytes) {               // la CLASSE (b) vera (N5, G3, Q1)
   const base = path.split("/").pop();
   const inRadice = !path.includes("/");
-  const prefissato = inRadice && base.startsWith(".~lockit-") &&
-                     !RE_SCHEMI_INTERNI.test(base) && base !== ".~lockit-quarantena";
-  const nomeUtente = !base.startsWith(".~lockit-") && !RE_OPACO.test(base);
+  const prefissato = inRadice && base.startsWith("_lockit-") &&
+                     !RE_SCHEMI_INTERNI.test(base) && base !== "_lockit-quarantena";
+  const nomeUtente = !base.startsWith("_lockit-") && !RE_OPACO.test(base);
   const sniffLKT1 = bytes && bytes.length >= 4 &&
     bytes[0] === 0x4c && bytes[1] === 0x4b && bytes[2] === 0x54 && bytes[3] === 0x31;
   return prefissato || (nomeUtente && sniffLKT1);

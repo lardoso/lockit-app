@@ -4,10 +4,10 @@ const te = new TextEncoder();
 const SESSION_ACCESS = Symbol("lockit.session.internal");
 const td = new TextDecoder("utf-8", { fatal: true });
 
-export const INTERNAL_PREFIX = ".~lockit-";
-export const TEMP_RE = /^\.~lockit-tmp-([0-9a-f]{32})\.bin$/;
-export const MANIFEST_RE = /^\.~lockit-txn-([0-9a-f]{32})\.json$/;
-export const STAMP_RE = /^\.~lockit-txn-([0-9a-f]{32})\.p(10|20|30|40|50|90)$/;
+export const INTERNAL_PREFIX = "_lockit-";
+export const TEMP_RE = /^_lockit-tmp-([0-9a-f]{32})\.bin$/;
+export const MANIFEST_RE = /^_lockit-txn-([0-9a-f]{32})\.json$/;
+export const STAMP_RE = /^_lockit-txn-([0-9a-f]{32})\.p(10|20|30|40|50|90)$/;
 export const OPAQUE_RE = /^[0-9a-z]{32}\.lockit$/;
 export const MAX_CLEAR_BYTES = 100 * 1024 * 1024;
 export const DEFAULT_AUTO_LOCK_MS = 10 * 60 * 1000;
@@ -118,7 +118,7 @@ function validateUserFileName(name) {
     throw new OrchestratorError("UNSUPPORTED_NAME", "nome file non valido");
   }
   if (name.startsWith(INTERNAL_PREFIX)) {
-    throw new OrchestratorError("UNSUPPORTED_NAME", "il prefisso .~lockit- è riservato");
+    throw new OrchestratorError("UNSUPPORTED_NAME", "il prefisso _lockit- è riservato");
   }
   if (name.includes("/") || name.includes("\\")) {
     throw new OrchestratorError("UNSUPPORTED_NAME", "il nome deve essere una singola componente");
@@ -133,15 +133,15 @@ function validateProtectSourceName(name) {
 }
 
 function tempName(opId) {
-  return `.~lockit-tmp-${opId}.bin`;
+  return `_lockit-tmp-${opId}.bin`;
 }
 
 function manifestName(opId) {
-  return `.~lockit-txn-${opId}.json`;
+  return `_lockit-txn-${opId}.json`;
 }
 
 function stampName(opId, phase) {
-  return `.~lockit-txn-${opId}.p${String(phase).padStart(2, "0")}`;
+  return `_lockit-txn-${opId}.p${String(phase).padStart(2, "0")}`;
 }
 
 function encodeJson(value) {
@@ -402,7 +402,7 @@ export class LockitOrchestrator {
   async #verifyProtectedEntry(session, dir, name, expectations, { temp = false } = {}) {
     const bytes = await this.#fs.readFile(await this.#fs.getFileHandle(dir, name));
     // Correzione autorevole della specifica: per un temporaneo si passa il nome
-    // fisico che il blob DEVE avere, non il nome .~lockit-tmp-* sul disco.
+    // fisico che il blob DEVE avere, non il nome _lockit-tmp-* sul disco.
     const physicalName = temp ? this.#crypto.opaqueNameOf(bytes) : name;
     try {
       const verified = await this.#verifyProtectedBytes(session, bytes, { ...expectations, physicalName });
@@ -466,7 +466,7 @@ export class LockitOrchestrator {
     const entries = await this.#fs.listDir(dir);
     for (const entry of entries) {
       if (entry.kind !== "file") continue;
-      if (entry.name === manifestName(opId) || entry.name.startsWith(`.~lockit-txn-${opId}.p`)) {
+      if (entry.name === manifestName(opId) || entry.name.startsWith(`_lockit-txn-${opId}.p`)) {
         await this.#fs.deleteFile(dir, entry.name, { role: "journal" });
       }
     }
